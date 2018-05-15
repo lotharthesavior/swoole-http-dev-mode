@@ -7,6 +7,17 @@
 var chokidar = require('chokidar'),
     {exec, spawn} = require('child_process');
 
+/**
+ * Configurations
+ */
+// laravel component
+var swoole_service_match = 'swoole:http';
+var swoole_service = 'php artisan swoole:http';
+// usual infrastructure
+// var swoole_service_match = 'http-server';
+// var swoole_service = 'php http-server.php';
+
+
 process.stdin.resume();//so the program will not close instantly
 
 var SwooleHttpDevMode = (function() {
@@ -157,7 +168,7 @@ var SwooleHttpDevMode = (function() {
             console.log("Checking Swoole Http Process... ");
 
             // search for existent processes
-            exec('ps -ef | grep -i swoole', function(err, stdout, stderr) {
+            exec('ps -ef | grep -i ' + swoole_service_match, function(err, stdout, stderr) {
                 if (err) {
                     console.error('Search Swoole Http Process Error: ' + err);
                     return;
@@ -168,7 +179,7 @@ var SwooleHttpDevMode = (function() {
                     .split('\n')
                     .filter(function(row){
                         return row.length > 0
-                            && row.indexOf('swoole:http') !== -1;
+                            && row.indexOf(swoole_service_match) !== -1;
                     }).length;
 
                 // kill existent processes
@@ -193,11 +204,13 @@ var SwooleHttpDevMode = (function() {
             var thatCallback = callback;
             var thatCallbackParam = callbackParam;
 
-            exec('pkill -f swoole:http', function(err, stdout, stderr) {
-                if (err) {
-                    console.error('Killing Swoole Http Process Error: ' + err);
-                    return;
-                }
+            exec('pkill -f ' + swoole_service_match, function(err, stdout, stderr) {
+                // Commented because it is facing some errors eventually, but it
+                // doesn't break the cycle if ignored
+                // if (err) {
+                //     console.error('Killing Swoole Http Process Error: ' + err);
+                //     return;
+                // }
 
                 console.log('Killing Swoole Http Process output:');
                 console.log(stdout);
@@ -221,7 +234,7 @@ var SwooleHttpDevMode = (function() {
          * @private
          */
         _executeServer: function _executeServer(action) {
-            exec('php artisan swoole:http ' + action, function(err, stdout, stderr) {
+            exec(swoole_service + ' ' + action, function(err, stdout, stderr) {
                 if (err) {
                     console.error('Swoole Start Process Error: ' + err);
                     return;
